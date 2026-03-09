@@ -1,38 +1,37 @@
-﻿using EvolCep.Data;
+﻿using EvolCep.Repositories.Interfaces;
 using EvolCep.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace EvolCep.Services
 {
     public class MembershipService : IMembershipService
     {
-        private readonly AppDbContext _context;
+        private readonly IClientRepository _clientRepository;
+        private readonly IMembershipRepository _membershipRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public MembershipService(AppDbContext context)
+        public MembershipService(
+            IClientRepository clientRepository,
+            IMembershipRepository membershipRepository,
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _clientRepository = clientRepository;
+            _membershipRepository = membershipRepository;
+            _unitOfWork = unitOfWork;
         }
         public async Task BuyAsync(int clientId, int membershipId)
         {
-            var client = await _context.Clients
-                .Include(c => c.Membership)
-                .FirstOrDefaultAsync(c => c.Id == clientId);
-
-            if (client == null)
+            var client = await _clientRepository.GetClientWithMembershipAsync(clientId) ??
                 throw new Exception("El cliente no existe");
 
             if (client.Membership != null &&
-                client.Membership.EndDate >= DateTime.Now &&
+                client.Membership.EndDate >= DateTime.UtcNow &&
                 client.Membership.RemainingClasses > 0)
             {
                 throw new Exception("El cliente ya tiene una membresía activa");
             }
 
-            var membership = await _context.Memberships
-                .FirstOrDefaultAsync(m => m.Id == membershipId);
-
-            if (membership == null)
-                throw new Exception("La membresía no existe");
+            var membership = await _membershipRepository.GetByIdAsync(membershipId) ??
+                 throw new Exception("La membresía no existe");
 
             // Activar membresía
             membership.StartDate = DateTime.Now;
@@ -41,7 +40,7 @@ namespace EvolCep.Services
 
             client.Membership = membership;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

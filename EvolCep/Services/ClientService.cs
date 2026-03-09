@@ -1,31 +1,32 @@
-﻿using EvolCep.Data;
-using EvolCep.Models;
+﻿using EvolCep.Models;
 using EvolCep.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using EvolCep.Dtos.Client;
+using EvolCep.Repositories.Interfaces;
 
 namespace EvolCep.Services
 {
     public class ClientService : IClientService
     {
-        private readonly AppDbContext _context;
+        private readonly IClientRepository _clientRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ClientService(AppDbContext context)
+        public ClientService(
+            IClientRepository clientRepository, 
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _clientRepository = clientRepository;
+            _unitOfWork = unitOfWork;
         }
         public async Task<Client> GetMyProfileAsync (int clientId)
         {
-            return await _context.Clients
-                .Include(c => c.Membership)
-                .FirstOrDefaultAsync(c => c.Id == clientId)
-                ?? throw new Exception("Cliente no encontrado");
+            var client = await _clientRepository.GetByIdAsync(clientId);
+
+           return client ?? throw new Exception("Cliente no encontrado");
         }
 
         public async Task UpdateMyProfileAsync(int clientId, UpdateClientDto dto)
         {
-            var client = await _context.Clients
-                .FirstOrDefaultAsync(c => c.Id == clientId)
+            var client = await _clientRepository.GetByIdAsync(clientId)
                 ?? throw new Exception("Cliente no encontrado");
 
             client.Name = dto.Name;
@@ -33,7 +34,7 @@ namespace EvolCep.Services
             client.PhoneNumber = dto.PhoneNumber;
             client.WeightKg = dto.WeightKg;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

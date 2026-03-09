@@ -5,7 +5,6 @@ using EvolCep.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using EvolCep.Constants;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace EvolCep.Services
 {
@@ -46,22 +45,19 @@ namespace EvolCep.Services
             var refreshToken = await _context.RefreshTokens
                 .Include(r => r.ApplicationUser)
                 .FirstOrDefaultAsync(r => 
-                r.Token == dto.RefreshToken &&
-                !r.IsRevoked);
-
-            if (refreshToken == null)
-                throw new UnauthorizedAccessException("Refresh Token inválido");
+                    r.Token == dto.RefreshToken &&
+                    !r.IsRevoked) ?? throw new UnauthorizedAccessException("Refresh Token inválido");
 
             if (refreshToken.ExpiresAt < DateTime.UtcNow)
                 throw new UnauthorizedAccessException("Refresh token expirado");
 
             refreshToken.IsRevoked = true;  
 
-            var newAccesToken = await GenerateTokensAsync(refreshToken.ApplicationUser!);
+            var newAccessToken = await GenerateTokensAsync(refreshToken.ApplicationUser!);
 
             await _context.SaveChangesAsync();
 
-            return newAccesToken;
+            return newAccessToken;
         }
 
         public async Task RegisterClientAsync(RegisterDto dto)
