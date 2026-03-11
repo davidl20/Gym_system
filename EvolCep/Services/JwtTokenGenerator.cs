@@ -47,8 +47,12 @@ namespace EvolCep.Services
             var claims = new List<Claim>
             {
                 new Claim (ClaimTypes.NameIdentifier, user.Id),
-                new Claim (ClaimTypes.Email, user.Email!),
-                new Claim ("ClientId", client.Id.ToString())
+                new Claim (ClaimTypes.Email, user.Email!)
+            };
+
+            if(client != null)
+            {
+                claims.Add (new Claim ("ClientId", client.Id.ToString()));
             };
 
             //Roles

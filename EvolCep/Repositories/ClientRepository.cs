@@ -11,6 +11,7 @@ namespace EvolCep.Repositories
 
         public ClientRepository(AppDbContext context) : base(context)
         {
+            _context = context;
         }
         public async Task AddEnrollmentAsync(ClientWorkoutSession enrollment)
         {

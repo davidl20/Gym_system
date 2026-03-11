@@ -1,5 +1,4 @@
-﻿using EvolCep.Dtos;
-using EvolCep.Services.Interfaces;
+﻿using EvolCep.Services.WorkSessions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EvolCep.Extensions;
@@ -11,31 +10,38 @@ namespace EvolCep.Controllers
     [Route("api/workout-sessions")]
     public class WorkoutSessionController : ControllerBase
     {
-        private readonly IWorkoutSessionService _service;
+        private readonly IWorkoutSessionQueryService _queryService;
+        private readonly IWorkoutSessionEnrollmentService _enrollmentService;
+        private readonly IWorkoutSessionCancellationService _cancellationService;
 
-        public WorkoutSessionController(IWorkoutSessionService service)
+        public WorkoutSessionController(
+            IWorkoutSessionQueryService queryService,
+            IWorkoutSessionEnrollmentService enrollmentService,
+            IWorkoutSessionCancellationService cancellationService)
         {
-            _service = service;
+            _queryService = queryService;
+            _enrollmentService = enrollmentService;
+            _cancellationService = cancellationService;
         }
 
-        [HttpPost("enroll")]
-        public async Task<IActionResult> Enroll (EnrollWorkoutSessionDto dto)
+        [HttpPost("{sessionId}/enroll")]
+        public async Task<IActionResult> Enroll(int sessionId)
         {
             var clientId = User.GetIdClient();
 
-            await _service.EnrollAsync (clientId, dto.WorkoutSessionId);
+            await _enrollmentService.EnrollAsync(
+                clientId,
+                sessionId);
 
             return Ok(new { message = "Agendamiento exitoso" });
         }
 
-        [HttpDelete("cancel")]
-        public async Task<IActionResult> Cancel (CancelWorkoutSessionDto dto)
+        [HttpDelete("{sessionId}/cancel")]
+        public async Task<IActionResult> Cancel(int sessionId)
         {
             var clientId = User.GetIdClient();
 
-            await _service.CancelAsync(
-                clientId,
-                dto.WorkoutSessionId);
+            await _cancellationService.CancelSessionAsync(sessionId, clientId);
 
             return Ok(new { message = "Clase agendada cancelada correctamente" });
         }
@@ -45,7 +51,8 @@ namespace EvolCep.Controllers
         {
             var clientId = User.GetIdClient ();
 
-            var sessions = await _service.GetTodaySessionsAsync(clientId);
+            var sessions = await _queryService.GetSessionsTodayAsync(clientId);
+
             return Ok(sessions);
         }
     }

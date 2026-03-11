@@ -12,6 +12,7 @@ namespace EvolCep.Repositories
 
         public WorkoutSessionRepository(AppDbContext context) : base(context)
         {
+            _context = context;
         }
         public async Task<int> CountEnrollmentsAsync(int workoutSessionId)
         {

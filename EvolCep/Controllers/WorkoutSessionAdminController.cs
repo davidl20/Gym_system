@@ -1,5 +1,5 @@
 ﻿using EvolCep.Dtos;
-using EvolCep.Services.Interfaces;
+using EvolCep.Services.WorkSessions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,17 +10,17 @@ namespace EvolCep.Controllers
     [Route("api/admin/workout-sessions")]
     public class WorkoutSessionAdminController : ControllerBase
     {
-        private readonly IWorkoutSessionService _service;
+        private readonly IWorkoutSessionCreationService _creationService;
 
-        public WorkoutSessionAdminController(IWorkoutSessionService service)
+        public WorkoutSessionAdminController(IWorkoutSessionCreationService creationService)
         {
-            _service = service;
+            _creationService = creationService;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create (CreateWorkoutSessionDto dto)
+        public async Task<IActionResult> Create ([FromBody]CreateWorkoutSessionDto dto)
         {
-            await _service.CreateAsync(dto);
+            await _creationService.CreateAsync(dto);
 
             return Ok(new { message = "Clase creada correctamente" });
         }
