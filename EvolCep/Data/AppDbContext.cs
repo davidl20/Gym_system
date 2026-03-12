@@ -14,6 +14,7 @@ namespace EvolCep.Data
 
         public DbSet<Client> Clients { get; set; }
         public DbSet<Membership> Memberships { get; set; }
+        public DbSet<ClientMembership> ClientMemberships { get; set; }
         public DbSet<WorkoutSession> WorkoutSessions { get; set; }
         public DbSet<ClientWorkoutSession> ClientWorkoutSessions { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
@@ -47,10 +48,15 @@ namespace EvolCep.Data
                 .HasForeignKey(cws => cws.WorkoutSessionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Membership>()
-                .HasMany(m => m.Clients)
-                .WithOne(c => c.Membership)
-                .HasForeignKey(m => m.MembershipId);
+            modelBuilder.Entity<ClientMembership>()
+                .HasOne(cm => cm.Client)
+                .WithMany(c => c.Memberships)
+                .HasForeignKey(cm => cm.ClientId);
+
+            modelBuilder.Entity<ClientMembership>()
+                .HasOne(cm => cm.MembershipPlan)
+                .WithMany(mp => mp.ClientsMemberships)
+                .HasForeignKey(cm => cm.MembershipPlanId);
         }
     }
 }

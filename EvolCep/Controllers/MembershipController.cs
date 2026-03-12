@@ -52,7 +52,7 @@ namespace EvolCep.Controllers
             return Ok(membership);
         }
 
-        [HttpGet("hitory")]
+        [HttpGet("history")]
         [Authorize]
         public async Task<IActionResult> MembershipHistory()
         {

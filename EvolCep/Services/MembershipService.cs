@@ -1,4 +1,5 @@
 ﻿using EvolCep.Dtos;
+using EvolCep.Models;
 using EvolCep.Repositories.Interfaces;
 using EvolCep.Services.Interfaces;
 
@@ -9,37 +10,39 @@ namespace EvolCep.Services
         private readonly IClientRepository _clientRepository;
         private readonly IMembershipRepository _membershipRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IClientMembershipRespository _clientMembershipRespository;
 
         public MembershipService(
             IClientRepository clientRepository,
             IMembershipRepository membershipRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IClientMembershipRespository clientMembershipRespository)
         {
             _clientRepository = clientRepository;
             _membershipRepository = membershipRepository;
             _unitOfWork = unitOfWork;
+            _clientMembershipRespository = clientMembershipRespository;
         }
         public async Task BuyAsync(int clientId, int membershipId)
         {
-            var client = await _clientRepository.GetClientWithMembershipAsync(clientId) ??
-                throw new Exception("El cliente no existe");
+            var plan = await _membershipRepository.GetByIdAsync(membershipId)
+                ?? throw new Exception("Membresía no encontrada");
 
-            if (client.Membership != null &&
-                client.Membership.EndDate >= DateTime.UtcNow &&
-                client.Membership.RemainingClasses > 0)
+            var activeMembership = await _clientMembershipRespository.GetActiveMembershipAsync(clientId);
+
+            if (activeMembership != null)
+                throw new Exception("Ya tienes una membresía activa. No puedes comprar otra hasta que expire.");
+
+            var newMembership = new ClientMembership
             {
-                throw new Exception("El cliente ya tiene una membresía activa");
-            }
+                ClientId = clientId,
+                MembershipPlanId = plan.Id,
+                RemainingClasses = plan.TotalClasses,
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddMonths(1) // Asumiendo que la membresía dura 1 mes
+            };
 
-            var membership = await _membershipRepository.GetByIdAsync(membershipId) ??
-                 throw new Exception("La membresía no existe");
-
-            // Activar membresía
-            membership.StartDate = DateTime.Now;
-            membership.EndDate = DateTime.Now.AddMonths(1);
-            membership.RemainingClasses = membership.TotalClasses;
-
-            client.Membership = membership;
+            await _clientMembershipRespository.AddAsync(newMembership);
 
             await _unitOfWork.SaveChangesAsync();
         }
@@ -59,36 +62,30 @@ namespace EvolCep.Services
 
         public async Task<IEnumerable<MyMembershipDto>> GetHistoryAsync(int clientId)
         {
-            var client = await _clientRepository.GetClientWithMembershipAsync(clientId);
+            var memberships = await _clientMembershipRespository.GetHistoryAsync(clientId);
 
-            if(client?.Membership == null)
-                return Enumerable.Empty<MyMembershipDto>();
-
-            return new List<MyMembershipDto>
+            return memberships.Select(m => new MyMembershipDto
             {
-                new MyMembershipDto
-                {
-                    Description = client.Membership.Description,
-                    RemainingClasses = client.Membership.RemainingClasses,
-                    StartDate = client.Membership.StartDate,
-                    EndDate = client.Membership.EndDate
-                }
-            };
+                Description = m.MembershipPlan.Description,
+                RemainingClasses = m.RemainingClasses,
+                StartDate = m.StartDate,
+                EndDate = m.EndDate
+            });
         }
 
         public async Task<MyMembershipDto> GetMyMembershipAsync(int clientId)
         {
-            var client = await _clientRepository.GetClientWithMembershipAsync(clientId);
+            var membership = await _clientMembershipRespository.GetActiveMembershipAsync(clientId);
 
-            if (client?.Membership == null)
+            if (membership == null)
                 return null;
 
             return new MyMembershipDto
             {
-                Description = client.Membership.Description,
-                RemainingClasses = client.Membership.RemainingClasses,
-                StartDate = client.Membership.StartDate,
-                EndDate = client.Membership.EndDate
+                Description = membership.MembershipPlan.Description,
+                RemainingClasses = membership.RemainingClasses,
+                StartDate = membership.StartDate,
+                EndDate = membership.EndDate
             };
         }
 

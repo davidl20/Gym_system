@@ -18,14 +18,13 @@ namespace EvolCep.Models
         public string PhoneNumber { get; set; } = string.Empty;
 
         //Membership
-        public int? MembershipId { get; set; }
-        public Membership? Membership { get; set; }
+        public ICollection<ClientMembership> Memberships { get; } = [];
 
         //Idntity relation
         public string ApplicationUserId { get; set; } = string.Empty;
         public ApplicationUser ApplicationUser { get; set; } = null!;
 
-        public ICollection<ClientWorkoutSession> ClientWorkoutSessions { get; } = new List<ClientWorkoutSession>();
+        public ICollection<ClientWorkoutSession> ClientWorkoutSessions { get; } = [];
 
     }
 }
