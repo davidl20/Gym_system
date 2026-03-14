@@ -1,6 +1,4 @@
-﻿using EvolCep.Data;
-using EvolCep.Dtos;
-using Microsoft.EntityFrameworkCore;
+﻿using EvolCep.Dtos;
 using EvolCep.Repositories.Interfaces;
 
 namespace EvolCep.Services.WorkSessions
@@ -14,9 +12,22 @@ namespace EvolCep.Services.WorkSessions
             _repository = repository;
         }
 
-        public async Task<IEnumerable<WorkoutSessionTodayDto>> GetSessionsTodayAsync(int clientid)
+        public async Task<IEnumerable<WorkoutSessionTodayDto>> GetSessionsByDateAsync(int clientId, DateTime date)
         {
-            return await _repository.GetTodaySessions(clientid);
+            if (date.Date < DateTime.UtcNow.Date)
+            {
+                throw new InvalidOperationException("No se pueden consultar clases en fechas pasadas");
+            }
+            var sessions = await _repository.GetSessionsByDateAsync(clientId, date.Date);
+
+            var threshold = DateTime.UtcNow.AddHours(2);
+
+            if (date.Date == DateTime.UtcNow.Date)
+            {
+                sessions = sessions.Where (s => s.StartDateTime >= threshold);
+            }
+
+            return sessions.OrderBy(s => s.StartDateTime);
         }
     }
 }

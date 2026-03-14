@@ -5,6 +5,7 @@ namespace EvolCep.Models
     public class Client
     {
         public int Id { get; set; }
+        public string Document { get; set; }
 
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
@@ -13,6 +14,7 @@ namespace EvolCep.Models
         public string LastName { get; set; } = string.Empty ;
         public DateTime BirthDate { get; set; }
         public decimal WeightKg { get; set; }
+        public string Email { get; set; }
 
         [MaxLength(20)]
         public string PhoneNumber { get; set; } = string.Empty;

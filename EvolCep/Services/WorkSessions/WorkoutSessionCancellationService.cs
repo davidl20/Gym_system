@@ -6,32 +6,37 @@ namespace EvolCep.Services.WorkSessions
 {
     public class WorkoutSessionCancellationService : IWorkoutSessionCancellationService
     {
-        private readonly IClientRepository _clientRepository;
+        private readonly IClientWorkoutSessionRepository _enrollmentRepository;
+        private readonly IClientMembershipRepository _clientMembershipRepository;
         private readonly IUnitOfWork _unitOfWork;   
 
         public WorkoutSessionCancellationService( 
-            IClientRepository clientRepository,
+            IClientWorkoutSessionRepository enrollmentRepository,
+            IClientMembershipRepository clientMembershipRepository,
             IUnitOfWork unitOfWork)
         {
+            _enrollmentRepository = enrollmentRepository;
+            _clientMembershipRepository = clientMembershipRepository;
             _unitOfWork = unitOfWork;
-            _clientRepository = clientRepository;
         }
         public async Task CancelSessionAsync(int sessionId, int clientId)
         {
-            var enrollment = await _clientRepository.GetEnrollmentAsync(clientId, sessionId) ??
-                throw new Exception("No tiene clases agendadas");
+            var enrollment = await _enrollmentRepository.GetClientSessionAsync(sessionId, clientId)
+                ?? throw new KeyNotFoundException("No se encontró una reserva para esta clase");
 
             var cancellationDeadLine = enrollment.StartDateTime.AddHours(-2);
 
             if (DateTime.UtcNow > cancellationDeadLine)
-                throw new Exception("La clase solo puede ser cancelada con mínimo 2 horas de anticipación");
+                throw new InvalidOperationException("La clase solo puede ser cancelada con mínimo 2 horas de anticipación");
 
-            var client = await _clientRepository.GetClientWithMembershipAsync(clientId);
+            var activeMembership = await _clientMembershipRepository.GetActiveMembershipAsync(clientId);
 
-            if (client?.Membership != null)
-                client.Membership.RemainingClasses ++;
-
-            await _clientRepository.RemoveEnrollmentAsync(enrollment);
+            if (activeMembership != null)
+            {
+                activeMembership.RemainingClasses++;
+            }
+                
+            _enrollmentRepository.Remove(enrollment);
 
             await _unitOfWork.SaveChangesAsync();
         }

@@ -25,21 +25,21 @@ namespace EvolCep.Services.WorkSessions
 
             if (start <= DateTime.UtcNow)
             {
-                throw new Exception("No se puede crear clases en horas pasadas");
+                throw new InvalidOperationException("No se puede crear clases en horas pasadas");
             }
 
-            var duration = dto.Duration ?? TimeSpan.FromHours(1);
-            var end = start.Add(duration);
+            var end = dto.StartDateTime.Add(dto.Duration);
 
             var overlapExist = await _repository.HasOverlapAsync(start, end);
 
             if (overlapExist)
-                throw new Exception("Ya existe una clase programada en ese horario o en un horario cercano. Por favor, elige otro horario.");
+                throw new InvalidOperationException("Ya existe una clase programada en ese horario");
 
             var session = new WorkoutSession
             {
+                Description = dto.Description,
                 StartDateTime = start,
-                Duration = duration,
+                Duration = dto.Duration,
                 MaxClients = dto.MaxClients ?? 10
             };
 

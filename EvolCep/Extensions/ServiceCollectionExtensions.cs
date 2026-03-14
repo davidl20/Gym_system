@@ -24,7 +24,8 @@ namespace EvolCep.Extensions
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IWorkoutSessionRepository, WorkoutSessionRepository>();
             services.AddScoped<IClientRepository, ClientRepository>();
-            services.AddScoped<IMembershipRepository, MembershipReppository>();
+            services.AddScoped<IMembershipRepository, MembershipRepository>();
+            services.AddScoped<IClientMembershipRepository, ClientMembershipRepository>();
 
             //Unit of Work
             services.AddScoped<IUnitOfWork, UnitOfWork>();

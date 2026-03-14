@@ -5,54 +5,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EvolCep.Repositories
 {
-    public class ClientRepository : GenericRepository<Client>,IClientRepository
+    public class ClientRepository : GenericRepository<Client>, IClientRepository
     {
-        private readonly AppDbContext _context;
-
         public ClientRepository(AppDbContext context) : base(context)
         {
-            _context = context;
-        }
-        public async Task AddEnrollmentAsync(ClientWorkoutSession enrollment)
-        {
-            await _context.ClientWorkoutSessions.AddAsync(enrollment);
         }
 
-        public async Task<bool> ClientAlreadyEnrolledAsync(int clientId, int workoutSessionId)
+        public async Task<Client?> GetByApplicationUserIdAsync(string clientId)
         {
-            return await _context.ClientWorkoutSessions
-                .AnyAsync(cws =>
-                    cws.ClientId == clientId &&
-                    cws.WorkoutSessionId == workoutSessionId);
+            return await _dbSet
+                .FirstOrDefaultAsync(c => c.ApplicationUserId == clientId);
         }
 
-        public async Task<bool> ClientHasClassThatDayAsync(int clientId, DateTime date)
+        public async Task<Client?> GetClientWithMemberShipAsync(int clientId)
         {
-            return await _context.ClientWorkoutSessions
-                .AnyAsync(cws =>
-                    cws.ClientId == clientId &&
-                    cws.StartDateTime.Date == date.Date);
-        }
-
-        public async Task<Client?> GetClientWithMembershipAsync(int clientId)
-        {
-            return await _context.Clients.
-                Include(c => c.Membership).
-                FirstOrDefaultAsync(c => c.Id == clientId);
-        }
-
-        public async Task<ClientWorkoutSession?> GetEnrollmentAsync(int clientId, int workoutSessionId)
-        {
-            return await _context.ClientWorkoutSessions
-                .FirstOrDefaultAsync(cws =>
-                    cws.ClientId == clientId &&
-                    cws.WorkoutSessionId == workoutSessionId);
-        }
-
-        public async Task RemoveEnrollmentAsync(ClientWorkoutSession enrollment)
-        {
-            _context.ClientWorkoutSessions.Remove(enrollment);
-            await Task.CompletedTask;
+            return await _dbSet
+                .Include(c => c.Memberships)
+                    .ThenInclude(cm => cm.MembershipPlan)
+                .FirstOrDefaultAsync (c => c.Id == clientId);
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace EvolCep.Repositories.Interfaces
 {
-    public interface IClientMembershipRespository : IGenericRepository<ClientMembership>
+    public interface IClientMembershipRepository : IGenericRepository<ClientMembership>
     {
         Task<ClientMembership?> GetActiveMembershipAsync(int clientId);
         Task<IEnumerable<ClientMembership>> GetHistoryAsync(int clientId);

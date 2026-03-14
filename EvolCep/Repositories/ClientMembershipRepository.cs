@@ -3,33 +3,35 @@ using EvolCep.Models;
 using EvolCep.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
+/** Clase que maneja las membresías compradas por los clientes**/
+
 namespace EvolCep.Repositories
 {
-    public class ClientMembershipRepository : GenericRepository<ClientMembership>, IClientMembershipRespository
+    public class ClientMembershipRepository : GenericRepository<ClientMembership>, IClientMembershipRepository
     {
-        private readonly AppDbContext _context;
-
         public ClientMembershipRepository(AppDbContext context) : base(context)
         {
-            _context = context;
+
         }
 
         public async Task<ClientMembership?> GetActiveMembershipAsync(int clientId)
         {
-            return await _context.ClientMemberships
-                .Include(m => m.MembershipPlan)
-                .FirstOrDefaultAsync(m =>
-                    m.ClientId == clientId &&
-                    m.EndDate >= DateTime.UtcNow &&
-                    m.RemainingClasses > 0);
+            return await _dbSet
+                .Include(cm => cm.MembershipPlan)
+                .Where(cm =>
+                    cm.ClientId == clientId &&
+                    cm.EndDate >= DateTime.UtcNow &&
+                    cm.RemainingClasses > 0)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<ClientMembership>> GetHistoryAsync(int clientId)
         {
-            return await _context.ClientMemberships
-                .Include(m => m.MembershipPlan)
-                .Where(m => m.ClientId == clientId)
-                .OrderByDescending(m => m.StartDate)
+            return await _dbSet
+                .AsNoTracking()
+                .Include(cm => cm.MembershipPlan)
+                .Where(cm => cm.ClientId == clientId)
+                .OrderByDescending(cm => cm.StartDate)
                 .ToListAsync();
         }
     }

@@ -7,42 +7,44 @@ namespace EvolCep.Services
 {
     public class MembershipService : IMembershipService
     {
-        private readonly IClientRepository _clientRepository;
         private readonly IMembershipRepository _membershipRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IClientMembershipRespository _clientMembershipRespository;
+        private readonly IClientMembershipRepository _clientMembershipRepository;
 
         public MembershipService(
-            IClientRepository clientRepository,
             IMembershipRepository membershipRepository,
             IUnitOfWork unitOfWork,
-            IClientMembershipRespository clientMembershipRespository)
+            IClientMembershipRepository clientMembershipRepository)
         {
-            _clientRepository = clientRepository;
             _membershipRepository = membershipRepository;
             _unitOfWork = unitOfWork;
-            _clientMembershipRespository = clientMembershipRespository;
+            _clientMembershipRepository = clientMembershipRepository;
         }
         public async Task BuyAsync(int clientId, int membershipId)
         {
             var plan = await _membershipRepository.GetByIdAsync(membershipId)
-                ?? throw new Exception("Membresía no encontrada");
+                ?? throw new KeyNotFoundException("El plan de membresía seleccionado no existe");
 
-            var activeMembership = await _clientMembershipRespository.GetActiveMembershipAsync(clientId);
+            var activeMembership = await _clientMembershipRepository.GetActiveMembershipAsync(clientId);
 
             if (activeMembership != null)
-                throw new Exception("Ya tienes una membresía activa. No puedes comprar otra hasta que expire.");
+                throw new InvalidOperationException("Ya tienes una membresía activa.");
+
+            DateTime startDate = DateTime.UtcNow;
+
+            int daysToAdd = plan.DurationInDays > 0 ? plan.DurationInDays : 30;
+            DateTime endDate = startDate.AddDays(daysToAdd);
 
             var newMembership = new ClientMembership
             {
                 ClientId = clientId,
                 MembershipPlanId = plan.Id,
                 RemainingClasses = plan.TotalClasses,
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddMonths(1) // Asumiendo que la membresía dura 1 mes
+                StartDate = startDate,
+                EndDate = endDate
             };
 
-            await _clientMembershipRespository.AddAsync(newMembership);
+            await _clientMembershipRepository.AddAsync(newMembership);
 
             await _unitOfWork.SaveChangesAsync();
         }
@@ -53,7 +55,6 @@ namespace EvolCep.Services
 
             return memberships.Select(m => new MembershipDto
             {
-                Id = m.Id,
                 Description = m.Description,
                 TotalClasses = m.TotalClasses,
                 Price = m.Price
@@ -62,32 +63,30 @@ namespace EvolCep.Services
 
         public async Task<IEnumerable<MyMembershipDto>> GetHistoryAsync(int clientId)
         {
-            var memberships = await _clientMembershipRespository.GetHistoryAsync(clientId);
+            var history = await _clientMembershipRepository.GetHistoryAsync(clientId);
 
-            return memberships.Select(m => new MyMembershipDto
-            {
-                Description = m.MembershipPlan.Description,
-                RemainingClasses = m.RemainingClasses,
-                StartDate = m.StartDate,
-                EndDate = m.EndDate
-            });
+            return history.Select(MapToMyMembershipDto);
         }
 
-        public async Task<MyMembershipDto> GetMyMembershipAsync(int clientId)
+        public async Task<MyMembershipDto?> GetMyMembershipAsync(int clientId)
         {
-            var membership = await _clientMembershipRespository.GetActiveMembershipAsync(clientId);
+            var membership = await _clientMembershipRepository.GetActiveMembershipAsync(clientId);
 
             if (membership == null)
                 return null;
 
-            return new MyMembershipDto
-            {
-                Description = membership.MembershipPlan.Description,
-                RemainingClasses = membership.RemainingClasses,
-                StartDate = membership.StartDate,
-                EndDate = membership.EndDate
-            };
+            return MapToMyMembershipDto(membership);
         }
 
+        private MyMembershipDto MapToMyMembershipDto(ClientMembership m)
+        {
+            return new MyMembershipDto
+            {
+                Description = m.MembershipPlan?.Description ?? "Plan sin descripción",
+                RemainingClasses = m.RemainingClasses,
+                StartDate = m.StartDate,
+                EndDate = m.EndDate
+            };
+        }
     }
 }

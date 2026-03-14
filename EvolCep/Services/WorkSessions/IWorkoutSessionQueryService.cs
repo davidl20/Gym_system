@@ -4,6 +4,6 @@ namespace EvolCep.Services.WorkSessions
 {
     public interface IWorkoutSessionQueryService
     {
-        Task<IEnumerable<WorkoutSessionTodayDto>> GetSessionsTodayAsync(int clientid);
+        Task<IEnumerable<WorkoutSessionTodayDto>> GetSessionsByDateAsync(int clientId, DateTime date);
     }
 }
