@@ -37,22 +37,25 @@ namespace EvolCep.Services
             var audience = _configuration["Jwt:Audience"]
                 ?? throw new InvalidOperationException("JWT Audience no configurado");
 
-            var expirationHours = int.Parse(
-                _configuration["Jwt:AccessTokenExpirationHours"] ?? "3"
-            );
-
-            var client = await _context.Clients
-                .FirstOrDefaultAsync(c => c.ApplicationUserId == user.Id);
+            var expirationHours = int.TryParse(
+                _configuration["Jwt:AccessTokenExpirationHours"],
+                out var hours) ? hours : 3;
+            
+            var clientId = await _context.Clients
+                .Where (c => c.ApplicationUserId == user.Id)
+                .Select (c => c.Id)
+                .FirstOrDefaultAsync();
 
             var claims = new List<Claim>
             {
-                new Claim (ClaimTypes.NameIdentifier, user.Id),
-                new Claim (ClaimTypes.Email, user.Email!)
+                new Claim (JwtRegisteredClaimNames.Sub,user.Id),
+                new Claim (ClaimTypes.Email, user.Email!),
+                new Claim (JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString())
             };
 
-            if(client != null)
+            if(clientId != 0)
             {
-                claims.Add (new Claim ("ClientId", client.Id.ToString()));
+                claims.Add (new Claim ("ClientId", clientId.ToString()));
             };
 
             //Roles
@@ -62,7 +65,16 @@ namespace EvolCep.Services
                 claims.Add (new Claim (ClaimTypes.Role, role));
             }
 
-            //ClienteId (si existe)
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtKey)
+            );
+
+            var creds = new SigningCredentials
+                (key,
+                SecurityAlgorithms.HmacSha256
+                );
+
+            /*ClienteId (si existe)
             var clientId = await _context.Clients
                 .Where(c => c.ApplicationUserId == user.Id)
                 .Select(c => c.Id)
@@ -71,16 +83,7 @@ namespace EvolCep.Services
             if (clientId != 0)
             {
                 claims.Add (new Claim ("client_id", clientId.ToString()));
-            }
-
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtKey)
-            );
-
-            var creds = new SigningCredentials 
-                (key, 
-                SecurityAlgorithms.HmacSha256
-                );
+            }*/
 
             var token = new JwtSecurityToken(
                 issuer: issuer,

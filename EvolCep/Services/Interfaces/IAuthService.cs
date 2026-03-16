@@ -7,5 +7,6 @@ namespace EvolCep.Services.Interfaces
         Task RegisterClientAsync (RegisterDto dto);
         Task<AuthResponseDto> LoginAsync (LoginDto dto); 
         Task<AuthResponseDto> RefreshTokenAsync (RefreshTokenRequestDto dto);
+        Task LogoutAsync(string refreshToken);
     }
 }

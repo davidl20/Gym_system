@@ -40,6 +40,16 @@ namespace EvolCep.Services
             return await GenerateTokensAsync(user);
         }
 
+        public async Task LogoutAsync(string refreshToken)
+        {
+            var token = await _context.RefreshTokens
+                .FirstOrDefaultAsync (r => r.Token == refreshToken) ?? throw new UnauthorizedAccessException("Refresh token inválido");
+
+            token.IsRevoked = true;
+
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto)
         {
             var refreshToken = await _context.RefreshTokens
@@ -66,20 +76,21 @@ namespace EvolCep.Services
 
             try
             {
-
                 var user = new ApplicationUser
                 {
                     UserName = dto.Email,
-                    Email = dto.Email,
+                    Email = dto.Email.Trim().ToLower(),
                     PhoneNumber = dto.PhoneNumber,
                 };
                 
                 var result = await _userManager.CreateAsync(user, dto.Password);
 
                 if (!result.Succeeded)
-                    throw new Exception(string.Join(", ",
-                        result.Errors.Select(e => e.Description)));
-
+                {
+                    var errors = string.Join ("," , result.Errors.Select (e => e.Description));
+                    throw new InvalidOperationException (errors);
+                }
+                    
                 await _userManager.AddToRoleAsync(user, Roles.Client);
 
                 var client = new Client
@@ -93,6 +104,7 @@ namespace EvolCep.Services
                 };
 
                 _context.Clients.Add(client);
+
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -110,12 +122,14 @@ namespace EvolCep.Services
 
             var refreshToken = new RefreshToken
             {
-                Token = Guid.NewGuid().ToString(),
+                //Token = Guid.NewGuid().ToString(),
+                Token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
                 ExpiresAt = DateTime.UtcNow.AddDays(7),
                 ApplicationUserId = user.Id
             };
 
             _context.RefreshTokens.Add(refreshToken);
+
             await _context.SaveChangesAsync();
 
             return new AuthResponseDto

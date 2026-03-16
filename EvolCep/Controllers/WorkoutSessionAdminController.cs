@@ -20,9 +20,17 @@ namespace EvolCep.Controllers
         [HttpPost]
         public async Task<IActionResult> Create ([FromBody]CreateWorkoutSessionDto dto)
         {
+            if (dto == null)
+                return BadRequest("Los datos de la sesión son obligatorios");
+            
             await _creationService.CreateAsync(dto);
 
-            return Ok(new { message = "Clase creada correctamente" });
+            return StatusCode(201, new
+            {
+                message = "Sesión de entrenamiento creada exitosamente",
+                scheduleFor = dto.StartDateTime,
+                description = dto.Description,
+            });
         }
     }
 }

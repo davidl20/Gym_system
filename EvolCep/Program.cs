@@ -1,6 +1,7 @@
 using EvolCep.Constants;
 using EvolCep.Data;
 using EvolCep.Extensions;
+using EvolCep.Middleware;
 using EvolCep.Models;
 using EvolCep.Services;
 using EvolCep.Services.Interfaces;
@@ -60,6 +61,8 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddApplicationServices();
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 //Seed
 await app.SeedRolesAsync();

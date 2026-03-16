@@ -2,11 +2,12 @@
 using EvolCep.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using EvolCep.Extensions;
 
 namespace EvolCep.Controllers
 {
     [ApiController]
-    [Route("api/Membership")]
+    [Route("api/[controller]")]
     [Authorize(Roles = "Client")]
     public class MembershipController : ControllerBase
     {
@@ -17,16 +18,16 @@ namespace EvolCep.Controllers
             _membershipService = membershipService;
         }
 
-        [HttpPost("buy/{membershipId}")]
+        [HttpPost("buy")]
         public async Task<IActionResult> BuyMembership([FromBody] BuyMembershipDto dto)
         {
-            var clientId = GetClientId();
+            var clientId = User.GetIdClient();
 
             await _membershipService.BuyAsync(clientId, dto.MembershipId);
 
             return Ok(new
             {
-                Message = "Membresía comprada exitosamente"
+                Message = "Membresía comprada exitosamente. Ya puedes agendar tus clases."
             });
         }
 
@@ -42,7 +43,7 @@ namespace EvolCep.Controllers
         [Authorize]
         public async Task<IActionResult> MyMembership()
         {
-            var clientId = GetClientId();
+            var clientId = User.GetIdClient();
 
             var membership = await _membershipService.GetMyMembershipAsync(clientId);
 
@@ -56,19 +57,11 @@ namespace EvolCep.Controllers
         [Authorize]
         public async Task<IActionResult> MembershipHistory()
         {
-            var clientId = GetClientId();
+            var clientId = User.GetIdClient();
 
             var history = await _membershipService.GetHistoryAsync(clientId);
 
             return Ok(history);
-        }
-
-        private int GetClientId()
-        {
-            var claim = User.FindFirst("ClientId")?.Value
-                ?? throw new Exception("ClientId no encontrado en el token");
-
-            return int.Parse(claim);
         }
     }
 }

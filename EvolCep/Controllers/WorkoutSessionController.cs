@@ -43,15 +43,17 @@ namespace EvolCep.Controllers
 
             await _cancellationService.CancelSessionAsync(sessionId, clientId);
 
-            return Ok(new { message = "Clase agendada cancelada correctamente" });
+            return Ok(new { message = "La reserva ha sido cancelada" });
         }
 
-        [HttpGet("today")]
-        public async Task<IActionResult> GetTodaySessions()
+        [HttpGet]
+        public async Task<IActionResult> GetSessions([FromBody] DateTime? date)
         {
             var clientId = User.GetIdClient ();
 
-            var sessions = await _queryService.GetSessionsTodayAsync(clientId);
+            var selectedDate = date ?? DateTime.Now;
+
+            var sessions = await _queryService.GetSessionsByDateAsync(clientId, selectedDate);
 
             return Ok(sessions);
         }

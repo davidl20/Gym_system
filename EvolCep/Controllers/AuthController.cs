@@ -16,49 +16,39 @@ namespace EvolCep.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register (RegisterDto dto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            if(!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             await _authService.RegisterClientAsync(dto);
-            return Ok();
+
+            return StatusCode(201, new { message = "Usuario registrado exitosamente. Ya puedes iniciar sesión." });
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto dto)
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var response = await _authService.LoginAsync(dto);
 
-            try
-            {
-                var response = await _authService.LoginAsync(dto);
-                return Ok(response);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            
+            return Ok(response);
         }
 
-        [HttpPost ("refresh")]
-        public async Task<IActionResult> Refresh (RefreshTokenRequestDto dto)
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var response = await _authService.RefreshTokenAsync(dto);
+            return Ok(response);
+        }
 
-            try
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout(LogoutRequestDto dto)
+        {
+            await _authService.LogoutAsync(dto.RefreshToken);
+
+            return Ok(new
             {
-                var response = await _authService.RefreshTokenAsync(dto);
-                return Ok(response);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized (ex.Message);
-            }
-               
+                message = "Logout exitoso"
+            });
+
+
         }
     }
 }

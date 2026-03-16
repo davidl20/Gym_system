@@ -7,7 +7,7 @@ using EvolCep.Extensions;
 namespace EvolCep.Controllers
 {
     [ApiController]
-    [Route("api/client")]
+    [Route("api/clients")]
     [Authorize(Roles = "Client")]
     public class ClientController : ControllerBase
     {
@@ -22,15 +22,20 @@ namespace EvolCep.Controllers
         public async Task<IActionResult> GetMyProfile()
         {
             var clientId = User.GetIdClient();
+
             var client = await _clientService.GetMyProfileAsync(clientId);
+
+            if (client == null)
+                return NotFound(new { message = "Perfil de usuario no encontrado." });
 
             return Ok(client);
         }
 
         [HttpPut("me")]
-        public async Task<IActionResult> UpdateMyProfile(UpdateClientDto dto)
+        public async Task<IActionResult> UpdateMyProfile([FromBody]UpdateClientDto dto)
         {
             var clientId = User.GetIdClient();
+
             await _clientService.UpdateMyProfileAsync(clientId, dto);
 
             return NoContent();
