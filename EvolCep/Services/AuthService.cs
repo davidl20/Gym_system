@@ -5,6 +5,7 @@ using EvolCep.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using EvolCep.Constants;
 using Microsoft.EntityFrameworkCore;
+using EvolCep.Shared.Dtos.Auth;
 
 namespace EvolCep.Services
 {

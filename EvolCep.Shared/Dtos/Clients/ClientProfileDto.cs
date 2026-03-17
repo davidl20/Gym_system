@@ -1,4 +1,6 @@
-﻿namespace EvolCep.Dtos.Client
+﻿using EvolCep.Shared.Dtos.Memberships;
+
+namespace EvolCep.Shared.Dtos.Clients
 {
     public class ClientProfileDto
     {

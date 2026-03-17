@@ -1,4 +1,4 @@
-﻿using EvolCep.Dtos.Client;
+﻿using EvolCep.Shared.Dtos.Clients;
 using EvolCep.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

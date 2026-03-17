@@ -1,4 +1,4 @@
-﻿namespace EvolCep.Dtos.Client
+﻿namespace EvolCep.Shared.Dtos.Clients
 {
     public class UpdateClientDto
     {

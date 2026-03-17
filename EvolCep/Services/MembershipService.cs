@@ -1,4 +1,4 @@
-﻿using EvolCep.Dtos;
+﻿using EvolCep.Shared.Dtos.Memberships;
 using EvolCep.Models;
 using EvolCep.Repositories.Interfaces;
 using EvolCep.Services.Interfaces;

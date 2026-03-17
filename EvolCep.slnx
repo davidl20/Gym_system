@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="EvolCep.Shared/EvolCep.Shared.csproj" Id="4dc83512-c5d0-4892-8ceb-d22affe037a3" />
   <Project Path="EvolCep/EvolCep.csproj" />
+  <Project Path="EvolCep_Frontend/EvolCep_Frontend.Client/EvolCep_Frontend.Client.csproj" Id="b2db7acc-7080-4c91-95c7-56beeeba1914" />
+  <Project Path="EvolCep_Frontend/EvolCep_Frontend/EvolCep_Frontend.csproj" Id="d5492209-ba77-46ae-b6e1-5d6ea68433cf" />
 </Solution>

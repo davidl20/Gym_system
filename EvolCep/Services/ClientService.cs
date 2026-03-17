@@ -1,7 +1,7 @@
-﻿using EvolCep.Dtos;
-using EvolCep.Services.Interfaces;
-using EvolCep.Dtos.Client;
+﻿using EvolCep.Services.Interfaces;
 using EvolCep.Repositories.Interfaces;
+using EvolCep.Shared.Dtos.Clients;
+using EvolCep.Shared.Dtos.Memberships;
 
 namespace EvolCep.Services
 {

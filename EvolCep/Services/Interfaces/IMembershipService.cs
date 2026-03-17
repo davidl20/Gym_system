@@ -1,4 +1,4 @@
-﻿using EvolCep.Dtos;
+﻿using EvolCep.Shared.Dtos.Memberships;
 
 namespace EvolCep.Services.Interfaces
 {

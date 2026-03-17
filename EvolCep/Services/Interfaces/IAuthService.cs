@@ -1,4 +1,6 @@
 ﻿using EvolCep.Dtos.Auth;
+using EvolCep.Shared.Dtos.Auth;
+
 
 namespace EvolCep.Services.Interfaces
 {

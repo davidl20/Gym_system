@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EvolCep.Dtos.Auth
+namespace EvolCep.Shared.Dtos.Auth
 {
     public class LoginDto
     {

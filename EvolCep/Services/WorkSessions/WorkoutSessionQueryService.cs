@@ -1,4 +1,4 @@
-﻿using EvolCep.Dtos;
+﻿using EvolCep.Shared.Dtos.Sessions;
 using EvolCep.Repositories.Interfaces;
 
 namespace EvolCep.Services.WorkSessions

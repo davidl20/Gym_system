@@ -20,7 +20,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("BlazorPolicy", policy =>
     {
-        policy.WithOrigins("https://localhost:7231") // ?? PUERTO DEL FRONT
+        policy.WithOrigins("https://localhost:7022") // ?? PUERTO DEL FRONT
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -64,25 +64,24 @@ var app = builder.Build();
 
 app.UseMiddleware<ExceptionMiddleware>();
 
-//Seed
-await app.SeedRolesAsync();
-await app.SeedAdminAsync();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
+app.UseHttpsRedirection();
+
+app.UseCors("BlazorPolicy");
 
 app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.UseHttpsRedirection();
-
-app.UseCors("BlazorPolicy");
-
 app.MapControllers();
+
+//Seed
+await app.SeedRolesAsync();
+await app.SeedAdminAsync();
 
 app.Run();

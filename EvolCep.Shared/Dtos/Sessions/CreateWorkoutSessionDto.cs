@@ -1,4 +1,4 @@
-﻿namespace EvolCep.Dtos
+﻿namespace EvolCep.Shared.Dtos.Sessions
 {
     public class CreateWorkoutSessionDto
     {

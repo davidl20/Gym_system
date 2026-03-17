@@ -1,4 +1,4 @@
-﻿namespace EvolCep.Dtos.Auth
+﻿namespace EvolCep.Shared.Dtos.Auth
 {
     public class LogoutRequestDto
     {

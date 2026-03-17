@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using EvolCep.Shared.Dtos.Auth;
 using EvolCep.Dtos.Auth;
 using EvolCep.Services.Interfaces;
 
@@ -47,8 +48,6 @@ namespace EvolCep.Controllers
             {
                 message = "Logout exitoso"
             });
-
-
         }
     }
 }

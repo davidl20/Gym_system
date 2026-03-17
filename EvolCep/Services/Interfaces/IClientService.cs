@@ -1,5 +1,4 @@
-﻿using EvolCep.Models;
-using EvolCep.Dtos.Client;
+﻿using EvolCep.Shared.Dtos.Clients;
 
 namespace EvolCep.Services.Interfaces
 {

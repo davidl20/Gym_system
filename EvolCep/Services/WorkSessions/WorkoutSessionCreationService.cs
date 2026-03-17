@@ -1,8 +1,6 @@
-﻿using EvolCep.Data;
-using EvolCep.Dtos;
+﻿using EvolCep.Shared.Dtos.Sessions;
 using EvolCep.Models;
 using EvolCep.Repositories.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace EvolCep.Services.WorkSessions
 {
