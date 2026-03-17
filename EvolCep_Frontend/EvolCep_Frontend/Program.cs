@@ -1,6 +1,7 @@
 using EvolCep_Frontend.Components;
 using EvolCep_Frontend.Client.Services;
 using Microsoft.AspNetCore.Components.Authorization;
+using EvolCep_Frontend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +14,8 @@ builder.Services.AddScoped(sp => new HttpClient
     BaseAddress = new Uri("https://localhost:7118/")
 });
 
-builder.Services.AddScoped<LocalStorageService>();
 builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<AuthenticationStateProvider, ApiAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthStateProvider>();
 
 var app = builder.Build();
 
@@ -32,7 +32,6 @@ else
 }
 
 app.UseHttpsRedirection();
-
 
 app.UseAntiforgery();
 

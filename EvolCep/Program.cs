@@ -22,7 +22,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("https://localhost:7022") // ?? PUERTO DEL FRONT
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 

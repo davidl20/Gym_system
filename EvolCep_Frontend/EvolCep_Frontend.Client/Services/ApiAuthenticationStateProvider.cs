@@ -4,116 +4,82 @@ using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.IdentityModel.Tokens.Jwt;
+
 
 namespace EvolCep_Frontend.Client.Services
 {
     public class ApiAuthenticationStateProvider : AuthenticationStateProvider
     {
-        private readonly HttpClient _httpClient;
+        private readonly AuthenticationState _anonymous;
         private readonly LocalStorageService _localStorageService;
 
-        private const string TOKEN_KEY = "authToken";
+        private const string AccesTokenKey = "auth_token";
+        private const string RefreshTokenKey = "refresh_token";
 
-        public ApiAuthenticationStateProvider(HttpClient httpClient, LocalStorageService localStorageService)
+        public ApiAuthenticationStateProvider(LocalStorageService localStorageService)
         {
-            _httpClient = httpClient;
             _localStorageService = localStorageService;
+            _anonymous = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var savedToken = await _localStorageService.GetItemAsync(TOKEN_KEY);
+            var token = await _localStorageService.GetItemAsync<string> (AccesTokenKey);
 
-            if (string.IsNullOrWhiteSpace(savedToken))
-                return CreateAnonymousState();
+            if (string.IsNullOrWhiteSpace(token))
+                return _anonymous;
 
-            SetAuthorizationHeader(savedToken);
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(token);
 
-            var claims = ParseClaimsFromJwt(savedToken);
-            var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "jwt"));
-
-            return new AuthenticationState(user);
-        }
-
-        public async Task MarkUserAsAuthenticated (string token)
-        {
-            await _localStorageService.SetItemAsync(TOKEN_KEY, token);
-
-            SetAuthorizationHeader(token);
-
-            var user = new ClaimsPrincipal(
-                new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt")
-                );
-
-            NotifyAuthenticationStateChanged(
-                Task.FromResult(new AuthenticationState(user))
-                );
-        }
-
-        public async Task MarkUserAsLoggedOut(string token)
-        {
-            await _localStorageService.RemoveItemAsync(TOKEN_KEY);
-
-            _httpClient.DefaultRequestHeaders.Authorization = null;
-
-            NotifyAuthenticationStateChanged(
-                Task.FromResult(CreateAnonymousState())
-            );
-        }
-
-        private void SetAuthorizationHeader (string token)
-        {
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-        }
-
-        private AuthenticationState CreateAnonymousState()
-        {
-            return new AuthenticationState(
-                new ClaimsPrincipal(new ClaimsIdentity())
-            );
-        }
-        private IEnumerable<Claim> ParseClaimsFromJwt (string jwt)
-        {
-            var claims = new List<Claim>();
-
-            var payload = jwt.Split('.')[1];
-            var jsonBytes = ParseBase64WithoutPadding(payload);
-
-            var keyValuePairs = JsonSerializer
-                .Deserialize<Dictionary<string, object>>(jsonBytes);
-
-            if (keyValuePairs == null)
-                return claims;
-
-            foreach (var kvp in keyValuePairs)
+            if (jwt.ValidTo <= DateTime.UtcNow)
             {
-                if (kvp.Value is JsonElement element &&
-                    element.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (var item in element.EnumerateArray())
-                    {
-                        claims.Add(new Claim(kvp.Key, item.ToString()));
-                    }
-                }
-                else
-                {
-                    claims.Add(new Claim(kvp.Key, kvp.Value?.ToString() ?? ""));
-                }
+                await ClearTokenAsync();
+                return _anonymous;
             }
 
-            return claims;
+            return BuildAuthState(jwt);
         }
 
-        private byte[] ParseBase64WithoutPadding(string base64)
+        public async Task MarkUserAsAuthenticated (string accesToken, string refreshToken)
         {
-            switch (base64.Length % 4)
-            {
-                case 2: base64 += "=="; break;
-                case 3: base64 += "="; break;
-            }
+            await _localStorageService.SetItemAsync(AccesTokenKey, accesToken);
+            await _localStorageService.SetItemAsync(RefreshTokenKey, refreshToken);
 
-            return Convert.FromBase64String(base64);
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(accesToken);
+
+            NotifyAuthenticationStateChanged(
+                Task.FromResult(BuildAuthState(jwt))
+                );
+        }
+
+        public async Task MarkUserAsLoggedOut()
+        {
+            await ClearTokenAsync();
+
+            NotifyAuthenticationStateChanged(
+                Task.FromResult(_anonymous)
+                );
+        }
+
+        public async Task<string?> GetAccesTokenAsync()
+            => await _localStorageService.GetItemAsync<string>(AccesTokenKey);
+
+        public async Task<string?> GetRefreshTokenAsync()
+            => await _localStorageService.GetItemAsync<string>(RefreshTokenKey);
+
+        private AuthenticationState BuildAuthState (JwtSecurityToken jwt)
+        {
+            var identity = new ClaimsIdentity(jwt.Claims, "jwt");
+
+            return new AuthenticationState(new ClaimsPrincipal(identity));
+        }
+
+        private async Task ClearTokenAsync()
+        {
+            await _localStorageService.RemoveItemAsync(AccesTokenKey);
+            await _localStorageService.RemoveItemAsync(RefreshTokenKey);
         }
     }
 }

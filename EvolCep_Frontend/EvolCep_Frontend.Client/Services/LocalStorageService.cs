@@ -1,4 +1,5 @@
 ﻿using Microsoft.JSInterop;
+using System.Text.Json;
 
 namespace EvolCep_Frontend.Client.Services
 {
@@ -13,12 +14,27 @@ namespace EvolCep_Frontend.Client.Services
 
         public async Task SetItemAsync(string key, string value)
         {
-            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", key, value);
+            var json = value is string s ? s : JsonSerializer.Serialize(value);
+            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", key, json);
         }
 
-        public async Task<string> GetItemAsync(string key)
+        public async Task<T?> GetItemAsync <T>(string key)
         {
-            return await _jsRuntime.InvokeAsync<string>("localStorage.getItem", key);
+            var json = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", key);
+
+            if(typeof(T) == typeof(string))
+            {
+                return (T)(object)json;
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<T>(json);
+            }
+            catch
+            {
+                return default;
+            }
         }
 
         public async Task RemoveItemAsync(string key)
