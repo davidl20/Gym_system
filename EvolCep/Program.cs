@@ -74,14 +74,15 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.MapControllers();
+app.UseHttpsRedirection();
 
 app.UseCors("BlazorPolicy");
+
+app.MapControllers();
 
 app.Run();

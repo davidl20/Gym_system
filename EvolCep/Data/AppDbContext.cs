@@ -9,7 +9,6 @@ namespace EvolCep.Data
         public AppDbContext(DbContextOptions<AppDbContext> options)
          : base(options)
         {
-
         }
 
         public DbSet<Client> Clients { get; set; }
@@ -34,7 +33,7 @@ namespace EvolCep.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ClientWorkoutSession>()
-                .HasKey(cws => new { cws.ClientId, cws.StartDateTime });
+                .HasKey(cws => new { cws.ClientId, cws.WorkoutSessionId });
 
             modelBuilder.Entity<ClientWorkoutSession>()
                 .HasOne(cws => cws.Client)
@@ -51,12 +50,14 @@ namespace EvolCep.Data
             modelBuilder.Entity<ClientMembership>()
                 .HasOne(cm => cm.Client)
                 .WithMany(c => c.Memberships)
-                .HasForeignKey(cm => cm.ClientId);
+                .HasForeignKey(cm => cm.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ClientMembership>()
                 .HasOne(cm => cm.MembershipPlan)
                 .WithMany(mp => mp.ClientsMemberships)
-                .HasForeignKey(cm => cm.MembershipPlanId);
+                .HasForeignKey(cm => cm.MembershipPlanId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

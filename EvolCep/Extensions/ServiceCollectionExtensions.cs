@@ -14,6 +14,7 @@ namespace EvolCep.Extensions
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
             services.AddScoped<IClientService, ClientService>();
+            services.AddScoped<IMembershipService, MembershipService>();
 
             services.AddScoped<IWorkoutSessionCancellationService, WorkoutSessionCancellationService>();
             services.AddScoped<IWorkoutSessionCreationService, WorkoutSessionCreationService>();
@@ -26,6 +27,7 @@ namespace EvolCep.Extensions
             services.AddScoped<IClientRepository, ClientRepository>();
             services.AddScoped<IMembershipRepository, MembershipRepository>();
             services.AddScoped<IClientMembershipRepository, ClientMembershipRepository>();
+            services.AddScoped<IClientWorkoutSessionRepository, ClientWorkoutSessionRepository>();
 
             //Unit of Work
             services.AddScoped<IUnitOfWork, UnitOfWork>();
