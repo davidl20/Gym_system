@@ -1,0 +1,56 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="">EvolCep</a>
+    </div>
+</div>
+
+<div class="flex-column">
+    <nav class="flex-column mt-2">
+        @* Opción visible para todos *@
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <i class="bi bi-house-door-fill me-2"></i> Inicio
+            </NavLink>
+        </div>
+
+        @* Opciones solo para usuarios AUTENTICADOS *@
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="mis-datos">
+                        <i class="bi bi-person-badge-fill me-2"></i> Mi Perfil
+                    </NavLink>
+                </div>
+
+                @* Opción solo para ADMINISTRADORES (Ejemplo de Roles) *@
+                <AuthorizeView Roles="Admin" Context="adminContext">
+                    <Authorized>
+                        <div class="nav-item px-3">
+                            <hr class="text-white-50" />
+                            <p class="text-white-50 small ps-2 mb-1">Administración</p>
+                            <NavLink class="nav-link" href="clientes">
+                                <i class="bi bi-people-fill me-2"></i> Gestión Clientes
+                            </NavLink>
+                        </div>
+                        <div class="nav-item px-3">
+                            <NavLink class="nav-link" href="pagos">
+                                <i class="bi bi-cash-stack me-2"></i> Reporte Pagos
+                            </NavLink>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+            </Authorized>
+
+            <NotAuthorized>
+                @* Opción para invitados *@
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="login">
+                        <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </nav>
+</div>
