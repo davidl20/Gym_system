@@ -4,28 +4,32 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-//1. Servicios Base
-builder.Services.AddScoped<LocalStorageService>();
+// 1. ESTADO DE AUTENTICACIÓN
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<ApiAuthenticationStateProvider>();
-builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<ApiAuthenticationStateProvider>());
 
-//2.Interceptor
+builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
+    sp.GetRequiredService<ApiAuthenticationStateProvider>());
+
+//2.SERVICIOS DE INFRAESTRUCTURA
+builder.Services.AddScoped<LocalStorageService>();
 builder.Services.AddTransient<AuthMessageHandler>();
 
-//3.HttpClient normal (el que usara la app y pasará por el interceptor)
-builder.Services.AddHttpClient("EvolCepAPI", client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7118");
-}).AddHttpMessageHandler<AuthMessageHandler>();
 
-//Cliente por defecto para la app
-builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("EvolCepAPI"));
-
-// 4. El HttpClient especial para el AuthService (SIN INTERCEPTOR, para que pueda hacer login/refresh sin interrumpirse)
+// 3.CONFIGURACIÓN DE HTTP CLIENTS 
+//Especializadopara Auth. Se usa para Login/Register para evitar bucles infinitos
 builder.Services.AddHttpClient<AuthService>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7118/");
 });
+
+// 3. CLIENTE GENERAL CON INTERCEPTOR
+//Se usa para todas las llamadas que requieren el token JWT
+builder.Services.AddHttpClient("EvolCepAPI", client => 
+{
+    client.BaseAddress = new Uri("https://localhost:7118/");
+})
+    .AddHttpMessageHandler<AuthMessageHandler>();
+    
 
 await builder.Build().RunAsync();

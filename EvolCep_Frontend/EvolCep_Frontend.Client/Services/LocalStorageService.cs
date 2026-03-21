@@ -20,15 +20,18 @@ namespace EvolCep_Frontend.Client.Services
 
         public async Task<T?> GetItemAsync <T>(string key)
         {
-            var json = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", key);
 
-            if(typeof(T) == typeof(string))
-            {
-                return (T)(object)json;
-            }
+            if (_jsRuntime is not IJSInProcessRuntime && _jsRuntime.GetType().Name == "UnsupportedJavaScriptRuntime")
+                return default;
 
             try
             {
+                var json = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", key);
+                if (string.IsNullOrEmpty(json)) return default;
+
+                if (typeof(T) == typeof(string))
+                    return (T)(object)json;
+
                 return JsonSerializer.Deserialize<T>(json);
             }
             catch

@@ -1,56 +1,81 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+﻿@using EvolCep_Frontend.Client.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="">EvolCep</a>
+        <a class="navbar-brand" href="">EvolCep</a>
     </div>
 </div>
 
-<div class="flex-column">
-    <nav class="flex-column mt-2">
-        @* Opción visible para todos *@
+<div class="nav-scrollable">
+    <nav class="flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <i class="bi bi-house-door-fill me-2"></i> Inicio
+                <i class="bi bi-house-door me-2"></i> Inicio
             </NavLink>
         </div>
 
-        @* Opciones solo para usuarios AUTENTICADOS *@
         <AuthorizeView>
             <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="mis-datos">
-                        <i class="bi bi-person-badge-fill me-2"></i> Mi Perfil
-                    </NavLink>
-                </div>
+                <hr class="text-white-50 mx-3" />
 
-                @* Opción solo para ADMINISTRADORES (Ejemplo de Roles) *@
-                <AuthorizeView Roles="Admin" Context="adminContext">
-                    <Authorized>
-                        <div class="nav-item px-3">
-                            <hr class="text-white-50" />
-                            <p class="text-white-50 small ps-2 mb-1">Administración</p>
-                            <NavLink class="nav-link" href="clientes">
-                                <i class="bi bi-people-fill me-2"></i> Gestión Clientes
-                            </NavLink>
-                        </div>
-                        <div class="nav-item px-3">
-                            <NavLink class="nav-link" href="pagos">
-                                <i class="bi bi-cash-stack me-2"></i> Reporte Pagos
-                            </NavLink>
-                        </div>
-                    </Authorized>
-                </AuthorizeView>
+                @* SECCIÓN PARA EL ADMINISTRADOR *@
+                @if (context.User.IsInRole("Admin"))
+                {
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="admin/dashboard">
+                            <i class="bi bi-speedometer2 me-2"></i> Dashboard Admin
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="admin/clases">
+                            <i class="bi bi-journal-bookmark-fill me-2"></i> Gestión de Clases
+                        </NavLink>
+                    </div>
+                }
+
+                @* SECCIÓN PARA EL CLIENTE (Si no es Admin) *@
+                @if (!context.User.IsInRole("Admin"))
+                {
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="customer/dashboard">
+                            <i class="bi bi-person-badge me-2"></i> Mi Panel
+                        </NavLink>
+                    </div>
+                }
+
+                <hr class="text-white-50 mx-3" />
+
+                @* BOTÓN DE LOGOUT *@
+                <div class="nav-item px-3">
+                    <button class="nav-link btn btn-link text-start w-100 border-0" @onclick="HandleLogout">
+                        <i class="bi bi-box-arrow-left me-2"></i> Cerrar Sesión
+                    </button>
+                </div>
             </Authorized>
 
             <NotAuthorized>
-                @* Opción para invitados *@
+                @* OPCIONES PARA INVITADOS *@
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="login">
                         <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="register">
+                        <i class="bi bi-person-plus me-2"></i> Registrarse
                     </NavLink>
                 </div>
             </NotAuthorized>
         </AuthorizeView>
     </nav>
 </div>
+
+@code {
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/");
+    }
+}

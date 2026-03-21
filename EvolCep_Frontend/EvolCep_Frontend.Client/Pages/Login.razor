@@ -1,60 +1,51 @@
 ﻿@page "/login"
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
 @using EvolCep.Shared.Dtos.Auth
 @using EvolCep_Frontend.Client.Services
 @inject AuthService AuthService
 @inject NavigationManager NavigationManager
 
-<div class="container">
-    <div class="row justify-content-center align-items-center vh-100">
-        <div class="col-md-5">
-            <div class="card-header bg-primary text-white text-center py-4">
-                <h3 class="fw-bold mb-0">EvolCep</h3>
-                <p class="small mb-0">Gestión de Gimnasios</p>
-            </div>
-            <div class="card-body" p-5>
-                <h4 class="text-center mb-4">Iniciar Sesión</h4>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-0">EvolCep - Login</h4>
+                </div>
+                <div class="card-body p-4">
+                    <EditForm Model="loginDto" OnValidSubmit="HandleLogin">
+                        <DataAnnotationsValidator />
 
-                <EditForm Model="loginDto" OnValidSubmit="HandleLogin">
-                    <DataAnnotationsValidator />
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger small">@errorMessage</div>
+                        }
 
-                    @if (!string.IsNullOrEmpty (errorMessage))
-                    {
-                        <div class="alert alert-danger d-flex align-items-center" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            <div>@errorMessage</div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <InputText @bind-Value="loginDto.Email" class="form-control" placeholder="admin@evolcep.com" />
+                            <ValidationMessage For="@(() => loginDto.Email)" class="text-danger small" />
                         </div>
-                    }
 
-                    <div class="form-floating mb-3">
-                        <InputText id="email" class="form-control" @bind-Value="loginDto.Email" placeholder="nombre@ejemplo.com" />
-                        <label for="email">Correo Electrónico</label>
-                        <ValidationMessage For="@(() => loginDto.Email)" class="text-danger small" />
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña</label>
+                            <InputText @bind-Value="loginDto.Password" type="password" class="form-control" />
+                            <ValidationMessage For="@(() => loginDto.Password)" class="text-danger small" />
+                        </div>
 
-                    <div class="form-floating mb-4">
-                        <InputText id="password" type="password" class="form-control" @bind-Value="loginDto.Password" placeholder="Contraseña" />
-                        <label for="password">Contraseña</label>
-                        <ValidationMessage For="@(() => loginDto.Password)" class="text-danger small" />
-                    </div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg" disabled="@isProcessing">
+                        <button type="submit" class="btn btn-primary w-100" disabled="@isProcessing">
                             @if (isProcessing)
                             {
-                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>Validando...</span>
+                                <span class="spinner-border spinner-border-sm"></span>
                             }
                             else
                             {
+
                                 <span>Entrar</span>
                             }
                         </button>
-                    </div>
-                </EditForm>
-            </div>
-            <div class="card-footer text-center py-3 bg-light">
-                <div class="small">
-                    <a href="/register" class="text-decoration-none text-muted">¿No tienes cuenta? Regístrate aquí</a>
+                    </EditForm>
                 </div>
             </div>
         </div>
@@ -71,26 +62,26 @@
         isProcessing = true;
         errorMessage = null;
 
-        try
-        {
-            var result = await AuthService.LoginAsync(loginDto);
+        var succes = await AuthService.LoginAsync(loginDto);
 
-            if (result)
+        if(succes)
+        {
+            var role = await AuthService.GetUserRoleAsync();
+
+            if(role == "Admin")
             {
-                NavigationManager.NavigateTo("/");
+                NavigationManager.NavigateTo("admin/dashboard");
             }
             else
             {
-                errorMessage = "Credenciales incorrectas. Inténtalo de nuevo.";
+                NavigationManager.NavigateTo("customer/dashboard");
             }
         }
-        catch (Exception ex)
+        else
         {
-            errorMessage = "Error de conexión con el servidor";
+            errorMessage = "Correo o contraseña incorrectos";
         }
-        finally
-        {
-            isProcessing = false;
-        }
+
+        isProcessing = false;
     }
 }

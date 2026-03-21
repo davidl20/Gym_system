@@ -1,0 +1,42 @@
+﻿@namespace EvolCep_Frontend.Client
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@using EvolCep_Frontend.Client.Layout
+
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(Routes).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(EvolCep_Frontend.Client.Layout.MainLayout)">
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated != true)
+                    {
+                        <RedirectToLogin />
+                    }
+                    else
+                    {
+                        <div class="container mt-5">
+                            <div class="alert alert-warning shadow-sm d-flex align-items-center" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div>
+                                    No tienes permisos suficientes para acceder a este recurso.
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>404 - No encontrado</PageTitle>
+            <LayoutView Layout="typeof(MainLayout)">
+                <div class="text-center mt-5">
+                    <h2 class="text-muted">Página no encontrada</h2>
+                    <p>Lo sentimos, no hay nada en esta dirección.</p>
+                    <a href="/" class="btn btn-primary mt-3">Volver al inicio</a>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

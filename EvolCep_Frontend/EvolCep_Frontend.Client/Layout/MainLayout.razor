@@ -3,39 +3,43 @@
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<AuthorizeView>
+    <Authorized>
+        @* Solo mostramos el diseño con Sidebar si el usuario entró *@
+        <div class="page">
+            <div class="sidebar">
+                <NavMenu />
+            </div>
 
-    <main>
-        <div class="top-row px-4 d-flex justify-content-end align-items-center">
-            <AuthorizeView>
-                <Authorized>
+            <main>
+                <div class="top-row px-4 d-flex justify-content-end align-items-center">
                     <span class="me-3 text-muted">
                         Hola, <strong>@context.User.Identity?.Name</strong>
                     </span>
                     <button class="btn btn-sm btn-outline-danger" @onclick="HandleLogout">
                         Cerrar Sesión
                     </button>
-                </Authorized>
-                <NotAuthorized>
-                    <a href="login" class="btn btn-sm btn-primary">Iniciar Sesión</a>
-                </NotAuthorized>
-            </AuthorizeView>
-        </div>
+                </div>
 
-        <article class="content px-4">
+                <article class="content px-4">
+                    @Body
+                </article>
+            </main>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        @* Si no está autorizado, solo renderizamos el Body (que será el Login) *@
+        @* Esto evita que el NavMenu cause errores de autorización *@
+        <div class="container-fluid p-0">
             @Body
-        </article>
-    </main>
-</div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
     private async Task HandleLogout()
     {
         await AuthService.LogoutAsync();
-        Navigation.NavigateTo("login", forceLoad: true); 
-        // forceLoad: true asegura que la app se refresque y limpie cualquier estado viejo
+        Navigation.NavigateTo("login", forceLoad: true);
     }
 }

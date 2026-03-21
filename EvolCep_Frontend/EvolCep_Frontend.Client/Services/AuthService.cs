@@ -1,4 +1,5 @@
 ﻿using EvolCep.Shared.Dtos.Auth;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 
 namespace EvolCep_Frontend.Client.Services
@@ -14,13 +15,31 @@ namespace EvolCep_Frontend.Client.Services
             _authProvider = authProvider;
         }
 
-        public async Task<bool> LoginAsync (LoginDto dto)
+        public async Task<string> GetUserRoleAsync()
         {
-            var response = await _http.PostAsJsonAsync ("api/auth/login", dto);
+            var token = await _authProvider.GetAccesTokenAsync();
+            if (string.IsNullOrEmpty(token))
+                return "Guest";
 
-            if(!response.IsSuccessStatusCode)
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(token);
+
+            var roleClaim = jwt.Claims.FirstOrDefault(c => c.Type == "role")
+                 ?? jwt.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
+
+            var roleValue = roleClaim?.Value ?? "Customer";
+
+            Console.WriteLine($"Rol detectado en el token: {roleValue}");
+
+            return roleValue;
+        }
+        public async Task<bool> LoginAsync(LoginDto dto)
+        {
+            var response = await _http.PostAsJsonAsync("api/auth/login", dto);
+
+            if (!response.IsSuccessStatusCode)
                 return false;
-            
+
             var result = await response.Content.ReadFromJsonAsync<AuthResponseDto>();
 
             if (result == null)
@@ -42,7 +61,7 @@ namespace EvolCep_Frontend.Client.Services
         {
             var refreshToken = await _authProvider.GetRefreshTokenAsync();
 
-            if(!string.IsNullOrEmpty(refreshToken))
+            if (!string.IsNullOrEmpty(refreshToken))
             {
                 await _http.PostAsJsonAsync("api/auth/logout", new
                 {
@@ -74,9 +93,10 @@ namespace EvolCep_Frontend.Client.Services
                 return false;
 
             await _authProvider.MarkUserAsAuthenticated(
-                result.AccessToken, 
+                result.AccessToken,
                 result.RefreshToken);
 
             return true;
         }
+    }
 }

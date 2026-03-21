@@ -1,5 +1,5 @@
 ﻿using EvolCep.Models;
-using EvolCep.Dtos;
+using EvolCep.Shared.Dtos.Sessions;
 
 namespace EvolCep.Repositories.Interfaces
 {

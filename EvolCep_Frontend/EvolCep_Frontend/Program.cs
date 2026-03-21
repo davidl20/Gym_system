@@ -5,21 +5,40 @@ using EvolCep_Frontend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1.SERVICIOS DE BLAZOR
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
+//2.AUTENTICACIÓN Y ESTADO
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationCore();
+
+
+builder.Services.AddScoped<ApiAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
+    sp.GetRequiredService<ApiAuthenticationStateProvider>());
+
+
+//3.SERVICIOS DE APLICACIÓN
+builder.Services.AddTransient<AuthMessageHandler>();
+builder.Services.AddScoped<LocalStorageService>();
+
+//HttpClient para el AuthService en el servidor
+builder.Services.AddHttpClient<AuthService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7118/");
+});
+
+//HttpClient genérico por si algún otro componente lo pide
 builder.Services.AddScoped(sp => new HttpClient
 {
     BaseAddress = new Uri("https://localhost:7118/")
 });
 
-builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthStateProvider>();
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// PIPELINE DE CONFIGURACIÓN
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -32,12 +51,12 @@ else
 }
 
 app.UseHttpsRedirection();
-
 app.UseAntiforgery();
-
 app.MapStaticAssets();
+
+//MAPEO DE COMPONENTES Y ENSAMBLADOS
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
-    .AddAdditionalAssemblies(typeof(EvolCep_Frontend.Client._Imports).Assembly);
+    .AddAdditionalAssemblies(typeof(EvolCep_Frontend.Client.Routes).Assembly);
 
 app.Run();
